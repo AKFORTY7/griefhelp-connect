@@ -14,7 +14,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [signupRole, setSignupRole] = useState<'reporter' | 'volunteer'>('reporter');
+  const [signupRole, setSignupRole] = useState<string>("reporter");
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -106,17 +106,26 @@ export function LoginForm() {
       const signupEmail = (document.getElementById('signup-email') as HTMLInputElement).value;
       const signupPassword = (document.getElementById('signup-password') as HTMLInputElement).value;
       
+      // First create the user
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
-        options: {
-          data: {
-            role: signupRole
-          }
-        }
       });
       
       if (error) throw error;
+      
+      // Then update the user's metadata with the role
+      if (data?.user) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: signupRole })
+          .eq('id', data.user.id);
+          
+        if (updateError) {
+          console.error('Error updating profile:', updateError);
+          throw new Error('Failed to set user role');
+        }
+      }
       
       toast({
         title: "Account created successfully",
@@ -216,7 +225,7 @@ export function LoginForm() {
                 id="role" 
                 className="w-full rounded-md border border-input bg-background px-3 py-2"
                 defaultValue="reporter"
-                onChange={(e) => setSignupRole(e.target.value as 'reporter' | 'volunteer')}
+                onChange={(e) => setSignupRole(e.target.value)}
               >
                 <option value="reporter">Grievance Reporter</option>
                 <option value="volunteer">Volunteer</option>
