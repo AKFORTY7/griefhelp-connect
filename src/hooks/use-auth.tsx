@@ -93,6 +93,7 @@ export function useAuth() {
     let isLoading = true;
     
     try {
+      // Make sure we're passing the role in the metadata so it can be picked up by the trigger
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
@@ -110,6 +111,7 @@ export function useAuth() {
         description: "You can now login with your credentials",
       });
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         variant: "destructive",
         title: "Signup failed",
