@@ -1,5 +1,5 @@
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sidebar } from "./Sidebar";
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -22,15 +23,56 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const handleLogout = () => {
-    // Here would be Supabase logout logic
-    toast({
-      title: "Logged out successfully",
-    });
-    navigate('/');
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      
+      if (!data.session) {
+        // Redirect to login if not authenticated
+        navigate('/');
+        return;
+      }
+      
+      // Get user role
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.session.user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+      
+      setUserRole(profile.role);
+    };
+    
+    checkAuth();
+  }, [navigate]);
+  
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out successfully",
+      });
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: error.message,
+      });
+    }
   };
   
   return (
@@ -65,7 +107,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>My Account {userRole && `(${userRole})`}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
@@ -80,7 +122,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </header>
       
       <div className="flex">
-        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} userRole={userRole} />
         <main className="flex-1 overflow-x-hidden">
           <div className="page-container">
             {children}

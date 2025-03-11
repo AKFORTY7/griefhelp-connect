@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,52 +7,91 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "./AuthLayout";
+import { supabase } from "@/integrations/supabase/client";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [signupRole, setSignupRole] = useState<'reporter' | 'volunteer'>('reporter');
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        redirectBasedOnRole();
+      }
+      setIsLoadingSession(false);
+    };
+    
+    checkSession();
+    
+    // Set up auth state listener
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        redirectBasedOnRole();
+      }
+    });
+    
+    return () => {
+      data.subscription.unsubscribe();
+    };
+  }, []);
+  
+  const redirectBasedOnRole = async () => {
+    // Fetch user profile to check role
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return;
+    
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
+    
+    // Redirect based on role
+    if (profile.role === 'admin') {
+      navigate('/dashboard');
+    } else if (profile.role === 'volunteer') {
+      navigate('/volunteer');
+    } else {
+      navigate('/report');
+    }
+  };
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Here we would integrate with Supabase Auth
-    // For now, simulating login logic
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // Mock login logic
-      if (email === 'admin@example.com' && password === 'password') {
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome to the Grievance Redressal Platform",
-        });
-        navigate('/dashboard');
-      } else if (email === 'volunteer@example.com' && password === 'password') {
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome to the Grievance Redressal Platform",
-        });
-        navigate('/volunteer');
-      } else if (email && password) {
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome to the Grievance Redressal Platform",
-        });
-        navigate('/report');
-      } else {
-        throw new Error("Invalid credentials");
-      }
-    } catch (error) {
+      if (error) throw error;
+      
+      toast({
+        title: "Logged in successfully",
+        description: "Welcome to the Grievance Redressal Platform",
+      });
+      
+      // redirectBasedOnRole will be triggered by onAuthStateChange
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Please check your credentials and try again",
+        description: error.message || "Please check your credentials and try again",
       });
     } finally {
       setIsLoading(false);
@@ -64,23 +103,48 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const signupEmail = (document.getElementById('signup-email') as HTMLInputElement).value;
+      const signupPassword = (document.getElementById('signup-password') as HTMLInputElement).value;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: signupEmail,
+        password: signupPassword,
+        options: {
+          data: {
+            role: signupRole
+          }
+        }
+      });
+      
+      if (error) throw error;
       
       toast({
         title: "Account created successfully",
         description: "You can now login with your credentials",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: "Please try again with different credentials",
+        description: error.message || "Please try again with different credentials",
       });
     } finally {
       setIsLoading(false);
     }
   };
+  
+  if (isLoadingSession) {
+    return (
+      <AuthLayout
+        title="Grievance Connect"
+        description="Loading..."
+      >
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AuthLayout>
+    );
+  }
   
   return (
     <AuthLayout
@@ -124,12 +188,6 @@ export function LoginForm() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
-            
-            <div className="text-center text-sm text-muted-foreground mt-4">
-              <p>For demo purposes:</p>
-              <p>Admin: admin@example.com / password</p>
-              <p>Volunteer: volunteer@example.com / password</p>
-            </div>
           </form>
         </TabsContent>
         
@@ -158,6 +216,7 @@ export function LoginForm() {
                 id="role" 
                 className="w-full rounded-md border border-input bg-background px-3 py-2"
                 defaultValue="reporter"
+                onChange={(e) => setSignupRole(e.target.value as 'reporter' | 'volunteer')}
               >
                 <option value="reporter">Grievance Reporter</option>
                 <option value="volunteer">Volunteer</option>
