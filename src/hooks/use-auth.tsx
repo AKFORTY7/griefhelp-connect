@@ -96,21 +96,14 @@ export function useAuth() {
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
+        options: {
+          data: {
+            role: signupRole
+          }
+        }
       });
       
       if (error) throw error;
-      
-      if (data?.user) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ role: signupRole })
-          .eq('id', data.user.id);
-          
-        if (updateError) {
-          console.error('Error updating profile:', updateError);
-          throw new Error('Failed to set user role');
-        }
-      }
       
       toast({
         title: "Account created successfully",
