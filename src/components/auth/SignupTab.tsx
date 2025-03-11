@@ -23,12 +23,14 @@ export function SignupTab({ onSignup }: SignupTabProps) {
     
     if (emailRef.current && passwordRef.current) {
       try {
+        console.log("Submitting with role:", signupRole);
         await onSignup(
           emailRef.current.value,
           passwordRef.current.value,
           signupRole
         );
       } catch (error) {
+        console.error("Form submission error:", error);
         // Error is already handled in the hook
       } finally {
         setIsLoading(false);
@@ -62,7 +64,7 @@ export function SignupTab({ onSignup }: SignupTabProps) {
         <select 
           id="role" 
           className="w-full rounded-md border border-input bg-background px-3 py-2"
-          defaultValue="reporter"
+          value={signupRole}
           onChange={(e) => setSignupRole(e.target.value as UserRole)}
         >
           <option value="reporter">Grievance Reporter</option>

@@ -93,18 +93,24 @@ export function useAuth() {
     let isLoading = true;
     
     try {
-      // Make sure we're passing the role in the metadata so it can be picked up by the trigger
+      // Explicitly convert role to string to avoid type issues
+      const role = String(signupRole);
+      console.log("Signing up with role:", role);
+      
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
         options: {
           data: {
-            role: signupRole
+            role: role
           }
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error details:", error);
+        throw error;
+      }
       
       toast({
         title: "Account created successfully",
