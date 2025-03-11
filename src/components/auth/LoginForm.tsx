@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,17 +7,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "./AuthLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
+
+type UserRole = Database["public"]["Enums"]["user_role"];
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [signupRole, setSignupRole] = useState<string>("reporter");
+  const [signupRole, setSignupRole] = useState<UserRole>("reporter");
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
@@ -30,7 +31,6 @@ export function LoginForm() {
     
     checkSession();
     
-    // Set up auth state listener
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         redirectBasedOnRole();
@@ -43,7 +43,6 @@ export function LoginForm() {
   }, []);
   
   const redirectBasedOnRole = async () => {
-    // Fetch user profile to check role
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) return;
@@ -59,7 +58,6 @@ export function LoginForm() {
       return;
     }
     
-    // Redirect based on role
     if (profile.role === 'admin') {
       navigate('/dashboard');
     } else if (profile.role === 'volunteer') {
@@ -86,7 +84,6 @@ export function LoginForm() {
         description: "Welcome to the Grievance Redressal Platform",
       });
       
-      // redirectBasedOnRole will be triggered by onAuthStateChange
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -106,7 +103,6 @@ export function LoginForm() {
       const signupEmail = (document.getElementById('signup-email') as HTMLInputElement).value;
       const signupPassword = (document.getElementById('signup-password') as HTMLInputElement).value;
       
-      // First create the user
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
@@ -114,7 +110,6 @@ export function LoginForm() {
       
       if (error) throw error;
       
-      // Then update the user's metadata with the role
       if (data?.user) {
         const { error: updateError } = await supabase
           .from('profiles')
@@ -225,7 +220,7 @@ export function LoginForm() {
                 id="role" 
                 className="w-full rounded-md border border-input bg-background px-3 py-2"
                 defaultValue="reporter"
-                onChange={(e) => setSignupRole(e.target.value)}
+                onChange={(e) => setSignupRole(e.target.value as UserRole)}
               >
                 <option value="reporter">Grievance Reporter</option>
                 <option value="volunteer">Volunteer</option>
