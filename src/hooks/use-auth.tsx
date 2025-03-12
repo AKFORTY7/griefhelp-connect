@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -27,35 +26,30 @@ export function useAuth() {
       });
       
       try {
-        // Use rpc to get profile data bypassing TypeScript issues
-        const { data: profileData, error: profileError } = await supabase
-          .rpc('get_profile_by_id', { user_id: data.user.id });
+        // Use get_user_role function which returns the role directly
+        const { data: userRole, error: roleError } = await supabase
+          .rpc('get_user_role', { user_id: data.user.id });
           
-        if (profileError) {
-          console.error('Error fetching user profile:', profileError);
+        if (roleError) {
+          console.error('Error fetching user role:', roleError);
           navigate('/report'); // Default redirect
           return;
         }
         
-        if (profileData) {
-          const userRole = profileData.role;
-          
-          switch (userRole) {
-            case 'admin':
-              navigate('/dashboard');
-              break;
-            case 'volunteer':
-              navigate('/volunteer');
-              break;
-            default:
-              navigate('/report');
-          }
-        } else {
-          // Default redirect if no profile is found
-          navigate('/report');
+        // userRole is directly the role string
+        switch (userRole) {
+          case 'admin':
+            navigate('/dashboard');
+            break;
+          case 'volunteer':
+            navigate('/volunteer');
+            break;
+          default:
+            navigate('/report');
         }
-      } catch (profileError) {
-        console.error('Error fetching user profile:', profileError);
+        
+      } catch (roleError) {
+        console.error('Error fetching user role:', roleError);
         // Default redirect on error
         navigate('/report');
       }
