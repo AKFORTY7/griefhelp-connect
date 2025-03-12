@@ -29,7 +29,7 @@ export function useAuth() {
       try {
         // Use type assertion to work around type issues
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+          .from('profiles' as any)
           .select('*')
           .eq('id', data.user.id)
           .single();
