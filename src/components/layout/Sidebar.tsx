@@ -22,7 +22,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface SidebarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  userRole: string | null;
 }
 
 interface SidebarItemProps {
@@ -68,7 +67,7 @@ function SidebarItem({ icon, label, path, active, badge }: SidebarItemProps) {
   );
 }
 
-export function Sidebar({ open, setOpen, userRole }: SidebarProps) {
+export function Sidebar({ open, setOpen }: SidebarProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
   
@@ -98,7 +97,7 @@ export function Sidebar({ open, setOpen, userRole }: SidebarProps) {
         )}
       >
         <div className="flex h-16 items-center justify-between px-4 py-4">
-          <Link to={userRole === 'admin' ? '/dashboard' : userRole === 'volunteer' ? '/volunteer' : '/report'} className="flex items-center gap-2 font-semibold" onClick={closeSidebarIfMobile}>
+          <Link to="/dashboard" className="flex items-center gap-2 font-semibold" onClick={closeSidebarIfMobile}>
             <AlertTriangle className="h-6 w-6 text-primary" />
             <span>Grievance Connect</span>
           </Link>
@@ -108,27 +107,13 @@ export function Sidebar({ open, setOpen, userRole }: SidebarProps) {
         
         <ScrollArea className="flex-1 overflow-auto py-2">
           <nav className="grid gap-1 px-2">
-            {/* Admin items */}
-            {userRole === 'admin' && (
-              <SidebarItem
-                icon={<Home className="h-5 w-5" />}
-                label="Dashboard"
-                path="/dashboard"
-                active={isActive("/dashboard")}
-              />
-            )}
+            <SidebarItem
+              icon={<Home className="h-5 w-5" />}
+              label="Dashboard"
+              path="/dashboard"
+              active={isActive("/dashboard")}
+            />
             
-            {/* Volunteer items */}
-            {userRole === 'volunteer' && (
-              <SidebarItem
-                icon={<Home className="h-5 w-5" />}
-                label="Volunteer Dashboard"
-                path="/volunteer"
-                active={isActive("/volunteer")}
-              />
-            )}
-            
-            {/* All users can report grievances */}
             <SidebarItem
               icon={<FileText className="h-5 w-5" />}
               label="Report Grievance"
@@ -173,37 +158,29 @@ export function Sidebar({ open, setOpen, userRole }: SidebarProps) {
               active={isActive("/emergency/shelter")}
             />
             
-            {/* Admin and volunteer can see management section */}
-            {(userRole === 'admin' || userRole === 'volunteer') && (
-              <>
-                <h3 className="my-2 px-4 text-xs font-medium text-muted-foreground">Management</h3>
-                
-                <SidebarItem
-                  icon={<Users className="h-5 w-5" />}
-                  label="Volunteers"
-                  path="/volunteers"
-                  active={isActive("/volunteers")}
-                  badge={3}
-                />
-                
-                {/* Only admin can see analytics */}
-                {userRole === 'admin' && (
-                  <SidebarItem
-                    icon={<PieChart className="h-5 w-5" />}
-                    label="Analytics"
-                    path="/analytics"
-                    active={isActive("/analytics")}
-                  />
-                )}
-                
-                <SidebarItem
-                  icon={<Settings className="h-5 w-5" />}
-                  label="Settings"
-                  path="/settings"
-                  active={isActive("/settings")}
-                />
-              </>
-            )}
+            <h3 className="my-2 px-4 text-xs font-medium text-muted-foreground">Management</h3>
+            
+            <SidebarItem
+              icon={<Users className="h-5 w-5" />}
+              label="Volunteers"
+              path="/volunteers"
+              active={isActive("/volunteers")}
+              badge={3}
+            />
+            
+            <SidebarItem
+              icon={<PieChart className="h-5 w-5" />}
+              label="Analytics"
+              path="/analytics"
+              active={isActive("/analytics")}
+            />
+            
+            <SidebarItem
+              icon={<Settings className="h-5 w-5" />}
+              label="Settings"
+              path="/settings"
+              active={isActive("/settings")}
+            />
           </nav>
         </ScrollArea>
         
