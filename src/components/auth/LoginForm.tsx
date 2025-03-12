@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,9 +22,9 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
       });
       
       if (error) throw error;
@@ -36,10 +35,11 @@ export function LoginForm() {
       });
       navigate('/dashboard');
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials and try again",
+        description: "Invalid email or password. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -55,13 +55,13 @@ export function LoginForm() {
         throw new Error("First name and last name are required");
       }
 
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
         password,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
             role: "reporter"
           }
         }
@@ -71,9 +71,10 @@ export function LoginForm() {
       
       toast({
         title: "Account created successfully",
-        description: "Please check your email for verification",
+        description: "Please check your email for verification instructions",
       });
     } catch (error) {
+      console.error('Signup error:', error);
       toast({
         variant: "destructive",
         title: "Signup failed",
