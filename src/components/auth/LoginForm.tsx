@@ -1,8 +1,16 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "./AuthLayout";
@@ -13,6 +21,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState<"volunteer" | "reporter">("reporter");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -62,7 +71,7 @@ export function LoginForm() {
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
-            role: "reporter"
+            role: role
           }
         }
       });
@@ -153,6 +162,18 @@ export function LoginForm() {
                 onChange={(e) => setLastName(e.target.value)}
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={role} onValueChange={(value: "reporter" | "volunteer") => setRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="reporter">Reporter</SelectItem>
+                  <SelectItem value="volunteer">Volunteer</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="signup-email">Email</Label>
