@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "./AuthLayout";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define profile interface to match our database schema
 interface Profile {
   id: string;
   name: string;
@@ -50,12 +52,16 @@ export function LoginForm() {
         description: "Welcome to the Grievance Redressal Platform",
       });
       
-      // Get user profile with proper typing
-      const { data: profile } = await supabase
+      // Get user profile - use a type assertion to avoid TypeScript errors
+      // This is a workaround until the types are properly updated
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
-        .single() as { data: Profile | null };
+        .single();
+      
+      // Cast the profile data to our interface
+      const profile = profileData as unknown as Profile;
       
       if (profile) {
         if (profile.role === 'admin') {
