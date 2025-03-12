@@ -15,7 +15,7 @@ export function SignupTab({ onSignup, isLoading }: SignupTabProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"volunteer" | "grievance_reporter">("grievance_reporter");
+  const [role, setRole] = useState<"volunteer" | "reporter">("reporter");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,13 +60,13 @@ export function SignupTab({ onSignup, isLoading }: SignupTabProps) {
         <Label htmlFor="role">Role</Label>
         <Select
           value={role}
-          onValueChange={(value: "volunteer" | "grievance_reporter") => setRole(value)}
+          onValueChange={(value: "volunteer" | "reporter") => setRole(value)}
         >
           <SelectTrigger id="role">
             <SelectValue placeholder="Select your role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="grievance_reporter">Grievance Reporter</SelectItem>
+            <SelectItem value="reporter">Grievance Reporter</SelectItem>
             <SelectItem value="volunteer">Volunteer</SelectItem>
           </SelectContent>
         </Select>
