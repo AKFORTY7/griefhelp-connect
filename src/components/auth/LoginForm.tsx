@@ -5,12 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "./AuthLayout";
+import { supabase } from "@/integrations/supabase/client";
 
 export function LoginForm() {
+  // Login form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Signup form state
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState<"volunteer" | "grievance_reporter">("grievance_reporter");
+  
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -19,40 +29,43 @@ export function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Here we would integrate with Supabase Auth
-    // For now, simulating login logic
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // Mock login logic
-      if (email === 'admin@example.com' && password === 'password') {
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome to the Grievance Redressal Platform",
-        });
-        navigate('/dashboard');
-      } else if (email === 'volunteer@example.com' && password === 'password') {
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome to the Grievance Redressal Platform",
-        });
-        navigate('/volunteer');
-      } else if (email && password) {
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome to the Grievance Redressal Platform",
-        });
-        navigate('/report');
+      if (error) throw error;
+      
+      toast({
+        title: "Logged in successfully",
+        description: "Welcome to the Grievance Redressal Platform",
+      });
+      
+      // Redirect based on user role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+      
+      if (profile) {
+        if (profile.role === 'admin') {
+          navigate('/dashboard');
+        } else if (profile.role === 'volunteer') {
+          navigate('/volunteer');
+        } else {
+          navigate('/report');
+        }
       } else {
-        throw new Error("Invalid credentials");
+        navigate('/report');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Please check your credentials and try again",
+        description: error.message || "Please check your credentials and try again",
       });
     } finally {
       setIsLoading(false);
@@ -64,18 +77,42 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Validate required fields
+      if (!name) {
+        throw new Error("Name is required");
+      }
+      
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({ 
+        email: signupEmail, 
+        password: signupPassword,
+        options: {
+          data: {
+            name,
+            role
+          }
+        }
+      });
+      
+      if (error) throw error;
       
       toast({
         title: "Account created successfully",
-        description: "You can now login with your credentials",
+        description: "You can now log in with your credentials",
       });
-    } catch (error) {
+      
+      // Clear signup form
+      setSignupEmail("");
+      setSignupPassword("");
+      setName("");
+      setRole("grievance_reporter");
+      
+    } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: "Please try again with different credentials",
+        description: error.message || "Please try again with different credentials",
       });
     } finally {
       setIsLoading(false);
@@ -136,11 +173,24 @@ export function LoginForm() {
         <TabsContent value="signup">
           <form onSubmit={handleSignup} className="space-y-4 pt-4">
             <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="signup-email">Email</Label>
               <Input
                 id="signup-email"
                 type="email"
                 placeholder="your@email.com"
+                value={signupEmail}
+                onChange={(e) => setSignupEmail(e.target.value)}
                 required
               />
             </div>
@@ -149,19 +199,25 @@ export function LoginForm() {
               <Input
                 id="signup-password"
                 type="password"
+                value={signupPassword}
+                onChange={(e) => setSignupPassword(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <select 
-                id="role" 
-                className="w-full rounded-md border border-input bg-background px-3 py-2"
-                defaultValue="reporter"
+              <Select
+                value={role}
+                onValueChange={(value: "volunteer" | "grievance_reporter") => setRole(value)}
               >
-                <option value="reporter">Grievance Reporter</option>
-                <option value="volunteer">Volunteer</option>
-              </select>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="grievance_reporter">Grievance Reporter</SelectItem>
+                  <SelectItem value="volunteer">Volunteer</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Sign Up"}
