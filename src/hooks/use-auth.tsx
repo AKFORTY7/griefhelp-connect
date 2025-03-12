@@ -97,6 +97,11 @@ export function useAuth() {
       const role = String(signupRole);
       console.log("Signing up with role:", role);
       
+      // Validate role is one of the expected values
+      if (!['reporter', 'volunteer', 'admin'].includes(role)) {
+        throw new Error("Invalid role selected");
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,

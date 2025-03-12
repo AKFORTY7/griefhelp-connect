@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Database } from "@/integrations/supabase/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type UserRole = Database["public"]["Enums"]["user_role"];
 
@@ -61,15 +62,18 @@ export function SignupTab({ onSignup }: SignupTabProps) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="role">Role</Label>
-        <select 
-          id="role" 
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
-          value={signupRole}
-          onChange={(e) => setSignupRole(e.target.value as UserRole)}
+        <Select 
+          value={signupRole} 
+          onValueChange={(value) => setSignupRole(value as UserRole)}
         >
-          <option value="reporter">Grievance Reporter</option>
-          <option value="volunteer">Volunteer</option>
-        </select>
+          <SelectTrigger id="role" className="w-full">
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="reporter">Grievance Reporter</SelectItem>
+            <SelectItem value="volunteer">Volunteer</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Sign Up"}
