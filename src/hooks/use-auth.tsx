@@ -27,18 +27,18 @@ export function useAuth() {
       });
       
       try {
-        // Use type assertion to work around type issues
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles' as any)
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        // Use rpc to get profile data bypassing TypeScript issues
+        const { data: profileData, error: profileError } = await supabase
+          .rpc('get_profile_by_id', { user_id: data.user.id });
           
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+          navigate('/report'); // Default redirect
+          return;
+        }
         
-        if (profile) {
-          // Type assertion to access the role property
-          const userRole = (profile as Profile).role;
+        if (profileData) {
+          const userRole = profileData.role;
           
           switch (userRole) {
             case 'admin':
