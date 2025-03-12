@@ -27,8 +27,9 @@ export function useAuth() {
       });
       
       try {
+        // Use proper typing for the profiles query
         const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+          .from<Profile>('profiles')
           .select('*')
           .eq('id', data.user.id)
           .maybeSingle();
