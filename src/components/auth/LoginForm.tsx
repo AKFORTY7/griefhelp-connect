@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { AuthLayout } from "./AuthLayout";
 import { supabase } from "@/integrations/supabase/client";
+
+interface Profile {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "volunteer" | "grievance_reporter";
+  created_at: string;
+  updated_at: string;
+}
 
 export function LoginForm() {
   // Login form state
@@ -42,12 +50,12 @@ export function LoginForm() {
         description: "Welcome to the Grievance Redressal Platform",
       });
       
-      // Redirect based on user role
+      // Get user profile with proper typing
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', data.user.id)
-        .single();
+        .single() as { data: Profile | null };
       
       if (profile) {
         if (profile.role === 'admin') {
