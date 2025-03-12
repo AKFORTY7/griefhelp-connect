@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,16 +51,15 @@ export function LoginForm() {
         description: "Welcome to the Grievance Redressal Platform",
       });
       
-      // Using a direct RPC call instead of querying the profiles table
-      // This avoids the TypeScript type issues
       try {
-        // Use any as a type assertion to bypass TypeScript checking
-        const client = supabase as any;
-        const { data: profileData } = await client
+        // Use type assertion to bypass TypeScript errors
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .single();
+          
+        if (profileError) throw profileError;
         
         if (profileData) {
           const userRole = profileData.role;
