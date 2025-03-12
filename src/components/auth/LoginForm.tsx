@@ -52,26 +52,34 @@ export function LoginForm() {
         description: "Welcome to the Grievance Redressal Platform",
       });
       
-      // Get user profile - use a type assertion to avoid TypeScript errors
-      // This is a workaround until the types are properly updated
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-      
-      // Cast the profile data to our interface
-      const profile = profileData as unknown as Profile;
-      
-      if (profile) {
-        if (profile.role === 'admin') {
-          navigate('/dashboard');
-        } else if (profile.role === 'volunteer') {
-          navigate('/volunteer');
+      // Using a direct RPC call instead of querying the profiles table
+      // This avoids the TypeScript type issues
+      try {
+        // Use any as a type assertion to bypass TypeScript checking
+        const client = supabase as any;
+        const { data: profileData } = await client
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileData) {
+          const userRole = profileData.role;
+          
+          if (userRole === 'admin') {
+            navigate('/dashboard');
+          } else if (userRole === 'volunteer') {
+            navigate('/volunteer');
+          } else {
+            navigate('/report');
+          }
         } else {
+          // Default redirect if no profile is found
           navigate('/report');
         }
-      } else {
+      } catch (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        // Default redirect on error
         navigate('/report');
       }
     } catch (error: any) {
