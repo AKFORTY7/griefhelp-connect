@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -27,12 +26,11 @@ export function useAuth() {
       });
       
       try {
-        // Use proper typing for the profiles query
         const { data: profile, error: profileError } = await supabase
-          .from<Profile>('profiles')
+          .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .maybeSingle();
+          .single();
           
         if (profileError) throw profileError;
         
@@ -69,7 +67,7 @@ export function useAuth() {
       setIsLoading(false);
     }
   };
-  
+
   const signup = async (formData: SignupFormData) => {
     setIsLoading(true);
     
