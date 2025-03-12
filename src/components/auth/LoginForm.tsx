@@ -52,24 +52,24 @@ export function LoginForm() {
       });
       
       try {
-        // Use type assertion to bypass TypeScript errors
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
+        const { data: profile, error: profileError } = await supabase
+          .from<Profile>('profiles')
+          .select()
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
           
         if (profileError) throw profileError;
         
-        if (profileData) {
-          const userRole = profileData.role;
-          
-          if (userRole === 'admin') {
-            navigate('/dashboard');
-          } else if (userRole === 'volunteer') {
-            navigate('/volunteer');
-          } else {
-            navigate('/report');
+        if (profile) {
+          switch (profile.role) {
+            case 'admin':
+              navigate('/dashboard');
+              break;
+            case 'volunteer':
+              navigate('/volunteer');
+              break;
+            default:
+              navigate('/report');
           }
         } else {
           // Default redirect if no profile is found
