@@ -51,14 +51,14 @@ export function LoginForm() {
       <div className="mt-6">
         <Button 
           onClick={handleCreateDemoUser} 
-          variant="outline" 
+          variant="secondary" 
           className="w-full"
           disabled={isLoading}
         >
-          Create Demo User
+          {isLoading ? "Processing..." : "Quick Access: Create & Login as Demo User"}
         </Button>
         <p className="text-xs text-center text-muted-foreground mt-2">
-          Creates a demo user with email: makeyourmark2023@gmail.com
+          Email: makeyourmark2023@gmail.com | Password: 123456
         </p>
       </div>
     </AuthLayout>

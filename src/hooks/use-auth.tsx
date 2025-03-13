@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -114,11 +115,56 @@ export function useAuth() {
 
   const createDemoUser = async () => {
     setIsLoading(true);
+    const demoEmail = "makeyourmark2023@gmail.com";
+    const demoPassword = "123456";
     
     try {
+      // First check if user already exists by trying to login
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword
+      });
+      
+      if (!loginError && loginData.user) {
+        // User exists and we've successfully logged in
+        toast({
+          title: "Demo user logged in",
+          description: "Successfully logged in with the demo account",
+        });
+        
+        // Navigate based on user role
+        try {
+          const { data: userRole, error: roleError } = await supabase
+            .rpc('get_user_role', { user_id: loginData.user.id });
+            
+          if (roleError) {
+            console.error('Error fetching user role:', roleError);
+            navigate('/report');
+            return;
+          }
+          
+          switch (userRole) {
+            case 'admin':
+              navigate('/dashboard');
+              break;
+            case 'volunteer':
+              navigate('/volunteer');
+              break;
+            default:
+              navigate('/report');
+          }
+        } catch (error) {
+          console.error('Error determining role:', error);
+          navigate('/report');
+        }
+        
+        return;
+      }
+      
+      // If login failed, try to create the user
       const { data, error } = await supabase.auth.signUp({ 
-        email: "makeyourmark2023@gmail.com", 
-        password: "123456",
+        email: demoEmail, 
+        password: demoPassword,
         options: {
           data: {
             name: "Demo User",
@@ -130,23 +176,27 @@ export function useAuth() {
       if (error) throw error;
       
       if (data?.user?.identities?.length === 0) {
+        // User exists but password might be different
         toast({
-          title: "Demo user already exists",
-          description: "You can now login with the demo credentials",
+          title: "Demo user exists",
+          description: `The demo user account already exists. Try logging in with email: ${demoEmail}`,
         });
         return;
       }
       
       toast({
-        title: "Demo user created successfully",
-        description: "Email: makeyourmark2023@gmail.com, Password: 123456",
+        title: "Demo user created",
+        description: `Created and logged in as ${demoEmail}`,
       });
       
+      // Auto-navigate to report page for demo users
+      navigate('/report');
+      
     } catch (error: any) {
-      console.error('Demo user creation error:', error);
+      console.error('Demo user operation error:', error);
       toast({
         variant: "destructive",
-        title: "Failed to create demo user",
+        title: "Demo user operation failed",
         description: error.message || "An unexpected error occurred",
       });
     } finally {
