@@ -95,7 +95,7 @@ export function useAuth() {
         options: {
           data: {
             name: formData.name,
-            role: formData.role // This is being cast to user_role enum in the database
+            role: formData.role
           }
         }
       });
