@@ -89,10 +89,23 @@ export function useAuth() {
       
       if (error) throw error;
       
+      // Check if email confirmation is required
+      if (data?.user?.identities?.length === 0) {
+        toast({
+          title: "User already exists",
+          description: "Please login instead or use a different email address",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       toast({
         title: "Account created successfully",
         description: "You can now log in with your credentials",
       });
+      
+      // After successful signup, switch to login view
+      return true;
       
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -101,6 +114,7 @@ export function useAuth() {
         title: "Signup failed",
         description: error.message || "Please try again with different credentials",
       });
+      return false;
     } finally {
       setIsLoading(false);
     }

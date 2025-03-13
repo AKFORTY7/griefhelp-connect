@@ -16,9 +16,9 @@ export function LoginForm() {
   };
   
   const handleSignup = async (data: SignupFormData) => {
-    await signup(data);
+    const success = await signup(data);
     // Reset form and switch to login tab on successful signup
-    if (!isLoading) {
+    if (success) {
       setActiveTab("login");
     }
   };
