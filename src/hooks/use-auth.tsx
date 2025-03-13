@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -27,17 +26,15 @@ export function useAuth() {
       });
       
       try {
-        // Use get_user_role function which returns the role directly
         const { data: userRole, error: roleError } = await supabase
           .rpc('get_user_role', { user_id: data.user.id });
           
         if (roleError) {
           console.error('Error fetching user role:', roleError);
-          navigate('/report'); // Default redirect
+          navigate('/report');
           return;
         }
         
-        // userRole is directly the role string
         switch (userRole) {
           case 'admin':
             navigate('/dashboard');
@@ -51,7 +48,6 @@ export function useAuth() {
         
       } catch (roleError) {
         console.error('Error fetching user role:', roleError);
-        // Default redirect on error
         navigate('/report');
       }
     } catch (error: any) {
@@ -70,12 +66,10 @@ export function useAuth() {
     setIsLoading(true);
     
     try {
-      // Validate required fields
       if (!formData.name) {
         throw new Error("Name is required");
       }
       
-      // Sign up with Supabase
       const { data, error } = await supabase.auth.signUp({ 
         email: formData.email, 
         password: formData.password,
@@ -89,7 +83,6 @@ export function useAuth() {
       
       if (error) throw error;
       
-      // Check if email confirmation is required
       if (data?.user?.identities?.length === 0) {
         toast({
           title: "User already exists",
@@ -104,7 +97,6 @@ export function useAuth() {
         description: "You can now log in with your credentials",
       });
       
-      // After successful signup, switch to login view
       return true;
       
     } catch (error: any) {
@@ -120,9 +112,52 @@ export function useAuth() {
     }
   };
 
+  const createDemoUser = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({ 
+        email: "makeyourmark2023@gmail.com", 
+        password: "123456",
+        options: {
+          data: {
+            name: "Demo User",
+            role: "reporter"
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.user?.identities?.length === 0) {
+        toast({
+          title: "Demo user already exists",
+          description: "You can now login with the demo credentials",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Demo user created successfully",
+        description: "Email: makeyourmark2023@gmail.com, Password: 123456",
+      });
+      
+    } catch (error: any) {
+      console.error('Demo user creation error:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to create demo user",
+        description: error.message || "An unexpected error occurred",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     login,
     signup,
+    createDemoUser,
   };
 }

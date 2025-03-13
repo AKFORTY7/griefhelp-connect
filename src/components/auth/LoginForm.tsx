@@ -6,9 +6,10 @@ import { LoginTab } from "./LoginTab";
 import { SignupTab } from "./SignupTab";
 import { useAuth } from "@/hooks/use-auth";
 import { LoginFormData, SignupFormData } from "@/types/auth";
+import { Button } from "@/components/ui/button";
 
 export function LoginForm() {
-  const { isLoading, login, signup } = useAuth();
+  const { isLoading, login, signup, createDemoUser } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("login");
   
   const handleLogin = async (data: LoginFormData) => {
@@ -21,6 +22,10 @@ export function LoginForm() {
     if (success) {
       setActiveTab("login");
     }
+  };
+  
+  const handleCreateDemoUser = async () => {
+    await createDemoUser();
   };
   
   return (
@@ -42,6 +47,20 @@ export function LoginForm() {
           <SignupTab onSignup={handleSignup} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
+      
+      <div className="mt-6">
+        <Button 
+          onClick={handleCreateDemoUser} 
+          variant="outline" 
+          className="w-full"
+          disabled={isLoading}
+        >
+          Create Demo User
+        </Button>
+        <p className="text-xs text-center text-muted-foreground mt-2">
+          Creates a demo user with email: makeyourmark2023@gmail.com
+        </p>
+      </div>
     </AuthLayout>
   );
 }
