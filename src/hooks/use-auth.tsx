@@ -95,7 +95,7 @@ export function useAuth() {
         options: {
           data: {
             name: formData.name,
-            role: formData.role
+            role: formData.role // This is being cast to user_role enum in the database
           }
         }
       });
@@ -124,10 +124,20 @@ export function useAuth() {
       
     } catch (error: any) {
       console.error('Signup error:', error);
+      
+      // Improved error handling for database-specific errors
+      let errorMessage = error.message || "Please try again with different credentials";
+      
+      // Check for specific database errors
+      if (error.message?.includes("user_role") || error.code === "42704") {
+        errorMessage = "There's a database configuration issue. Please contact the administrator.";
+        console.error('Database configuration error: The user_role enum might not exist');
+      }
+      
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: error.message || "Please try again with different credentials",
+        description: errorMessage,
       });
       return false;
     } finally {
