@@ -71,6 +71,24 @@ export function useAuth() {
         throw new Error("Name is required");
       }
       
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', formData.email)
+        .single();
+        
+      if (existingUser) {
+        toast({
+          variant: "destructive",
+          title: "User already exists",
+          description: "Please login instead or use a different email address",
+        });
+        setIsLoading(false);
+        return false;
+      }
+      
+      // Create new user in auth
       const { data, error } = await supabase.auth.signUp({ 
         email: formData.email, 
         password: formData.password,
@@ -84,14 +102,18 @@ export function useAuth() {
       
       if (error) throw error;
       
+      // Check if user already exists in auth but not in profiles
       if (data?.user?.identities?.length === 0) {
         toast({
           title: "User already exists",
           description: "Please login instead or use a different email address",
           variant: "destructive"
         });
-        return;
+        return false;
       }
+      
+      // User created successfully
+      console.log("User created successfully:", data.user);
       
       toast({
         title: "Account created successfully",
