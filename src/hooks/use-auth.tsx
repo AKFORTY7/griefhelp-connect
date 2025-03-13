@@ -125,13 +125,18 @@ export function useAuth() {
     } catch (error: any) {
       console.error('Signup error:', error);
       
-      // Improved error handling for database-specific errors
+      // Enhanced error handling with more specific messages
       let errorMessage = error.message || "Please try again with different credentials";
       
-      // Check for specific database errors
-      if (error.message?.includes("user_role") || error.code === "42704") {
-        errorMessage = "There's a database configuration issue. Please contact the administrator.";
-        console.error('Database configuration error: The user_role enum might not exist');
+      if (error.message?.includes("user_role")) {
+        errorMessage = "There's an issue with the role assignment. Please try again.";
+      } else if (error.code === "23505") {
+        errorMessage = "This email is already registered. Please login instead.";
+      } else if (error.code === "23514" || error.code === "23503") {
+        errorMessage = "Invalid data provided. Please check your information.";
+      } else if (error.code?.startsWith("42")) {
+        errorMessage = "There's a database configuration issue. Please try again later.";
+        console.error('Database configuration error:', error);
       }
       
       toast({
